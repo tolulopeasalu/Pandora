@@ -71,7 +71,7 @@ internal class InMemoryThreatsLocalDataSource
 
         override fun observeThreat(): Flow<Threat> = threat
     override fun getNearbyThreats(): List<Threat> {
-        TODO("Not yet implemented")
+        return listOf(threat.value)
     }
 
     @OptIn(ExperimentalTime::class)

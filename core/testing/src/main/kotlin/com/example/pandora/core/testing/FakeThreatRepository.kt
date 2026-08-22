@@ -38,7 +38,7 @@ class FakeThreatRepository @OptIn(ExperimentalTime::class) constructor(
     override fun observeThreat(): Flow<Threat> = threat
 
     override fun getNearbyThreats(): List<Threat> {
-        TODO("Not yet implemented")
+        return listOf(threat.value)
     }
 
     override suspend fun refreshThreat() {
