@@ -26,15 +26,15 @@ Each threat describes:
 
 ## Threat Model
 
-| Field | Type | Description |
-|------|------|-------------|
-| id | String | Unique identifier for the threat. |
-| name | String | Disease name (e.g. Cholera, Lassa Fever, Smallpox). |
-| severity | Severity | Current risk level (LOW, MEDIUM, HIGH, CRITICAL). |
-| area | Area | Geographic area covered by this assessment. |
-| guidance | String | Recommended actions for users in the affected area. |
-| reportedAt | Instant | When this threat information was published or updated. |
-| expiresAt | Instant | Time after which the information is considered stale. |
+| Field | Type         | Description |
+|------|--------------|-------------|
+| id | String       | Unique identifier for the threat. |
+| name | String       | Disease name (e.g. Cholera, Lassa Fever, Smallpox). |
+| severity | Severity     | Current risk level (LOW, MEDIUM, HIGH, CRITICAL). |
+| area | Area         | Geographic area covered by this assessment. |
+| guidance | List<String> | Recommended actions for users in the affected area. |
+| reportedAt | Instant      | When this threat information was published or updated. |
+| expiresAt | Instant      | Time after which the information is considered stale. |
 
 
 ## Fresh vs Stale

@@ -2,8 +2,8 @@ package com.example.pandora.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pandora.core.domain.ObserveGreetingUseCase
-import com.example.pandora.core.domain.RefreshGreetingUseCase
+import com.example.pandora.core.domain.ObserveThreatUseCase
+import com.example.pandora.core.domain.RefreshThreatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +18,8 @@ import javax.inject.Inject
 class HomeViewModel
     @Inject
     constructor(
-        private val observeGreeting: ObserveGreetingUseCase,
-        private val refreshGreeting: RefreshGreetingUseCase,
+        private val observeThreat: ObserveThreatUseCase,
+        private val refreshThreat: RefreshThreatUseCase,
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(HomeUiState())
         val state: StateFlow<HomeUiState> = mutableState
@@ -28,7 +28,7 @@ class HomeViewModel
         val effects = effectChannel.receiveAsFlow()
 
         init {
-            observeGreetingState()
+            observeThreatState()
             refresh()
         }
 
@@ -38,15 +38,15 @@ class HomeViewModel
             }
         }
 
-        private fun observeGreetingState() {
+        private fun observeThreatState() {
             viewModelScope.launch {
-                observeGreeting()
+                observeThreat()
                     .catch { error -> handleError(error) }
                     .collect { greeting ->
                         mutableState.update {
                             it.copy(
                                 isLoading = false,
-                                greeting = greeting.message,
+                                greeting = greeting.guidance[0],
                                 errorMessage = null,
                             )
                         }
@@ -57,7 +57,7 @@ class HomeViewModel
         private fun refresh() {
             mutableState.update { it.copy(isLoading = true, errorMessage = null) }
             viewModelScope.launch {
-                runCatching { refreshGreeting() }
+                runCatching { refreshThreat() }
                     .onFailure(::handleError)
                 mutableState.update { it.copy(isLoading = false) }
             }

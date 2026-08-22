@@ -1,6 +1,6 @@
 package com.example.pandora.core.data
 
-import com.example.pandora.core.model.Greeting
+import com.example.pandora.core.model.Threat
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
-class DefaultGreetingRepositoryTest {
+class DefaultThreatRepositoryTest {
     private val dataSource = FakeGreetingLocalDataSource()
-    private val repository = DefaultGreetingRepository(dataSource)
+    private val repository = DefaultThreatRepository(dataSource)
 
     @Test
     fun `observe greeting delegates to local data source`() =
@@ -28,15 +28,15 @@ class DefaultGreetingRepositoryTest {
         }
 }
 
-private class FakeGreetingLocalDataSource : GreetingLocalDataSource {
-    private val greeting = MutableStateFlow(Greeting("Initial"))
+private class FakeGreetingLocalDataSource : ThreatsLocalDataSource {
+    private val threat = MutableStateFlow(Threat("Initial"))
     var refreshCount = 0
         private set
 
-    override fun observeGreeting(): Flow<Greeting> = greeting
+    override fun observeThreat(): Flow<Threat> = threat
 
-    override suspend fun refreshGreeting() {
+    override suspend fun refreshThreat() {
         refreshCount += 1
-        greeting.value = Greeting("Refreshed")
+        threat.value = Threat("Refreshed")
     }
 }

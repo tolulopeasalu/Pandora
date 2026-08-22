@@ -12,9 +12,9 @@ import javax.inject.Singleton
 internal abstract class DataModule {
     @Binds
     @Singleton
-    abstract fun bindGreetingLocalDataSource(implementation: InMemoryGreetingLocalDataSource): GreetingLocalDataSource
+    abstract fun bindGreetingLocalDataSource(implementation: InMemoryThreatsLocalDataSource): ThreatsLocalDataSource
 
     @Binds
     @Singleton
-    abstract fun bindGreetingRepository(implementation: DefaultGreetingRepository): GreetingRepository
+    abstract fun bindGreetingRepository(implementation: DefaultThreatRepository): GreetingRepository
 }

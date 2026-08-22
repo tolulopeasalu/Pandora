@@ -1,10 +1,10 @@
 package com.example.pandora.feature.home
 
 import app.cash.turbine.test
-import com.example.pandora.core.domain.ObserveGreetingUseCase
-import com.example.pandora.core.domain.RefreshGreetingUseCase
-import com.example.pandora.core.model.Greeting
-import com.example.pandora.core.testing.FakeGreetingRepository
+import com.example.pandora.core.domain.ObserveThreatUseCase
+import com.example.pandora.core.domain.RefreshThreatUseCase
+import com.example.pandora.core.model.Threat
+import com.example.pandora.core.testing.FakeThreatRepository
 import com.example.pandora.core.testing.MainDispatcherRule
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,7 +18,7 @@ class HomeViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = FakeGreetingRepository(Greeting("Foundation ready"))
+    private val repository = FakeThreatRepository(Threat("Foundation ready"))
 
     @Test
     fun `initial state observes greeting and refreshes repository`() =
@@ -49,7 +49,7 @@ class HomeViewModelTest {
 
     private fun createViewModel() =
         HomeViewModel(
-            observeGreeting = ObserveGreetingUseCase(repository),
-            refreshGreeting = RefreshGreetingUseCase(repository),
+            observeThreat = ObserveThreatUseCase(repository),
+            refreshThreat = RefreshThreatUseCase(repository),
         )
 }
