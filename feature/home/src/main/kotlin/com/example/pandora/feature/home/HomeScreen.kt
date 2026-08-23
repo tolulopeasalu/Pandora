@@ -104,7 +104,7 @@ private fun HomeContent(
                     onClick = onRefresh,
                     modifier = Modifier.heightIn(min = 48.dp),
                 ) {
-                    Text("Refresh foundation message")
+                    Text("Refresh threats list")
                 }
             }
         }

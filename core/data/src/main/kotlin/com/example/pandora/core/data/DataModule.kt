@@ -1,6 +1,6 @@
 package com.example.pandora.core.data
 
-import com.example.pandora.core.domain.GreetingRepository
+import com.example.pandora.core.domain.ThreatRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -12,9 +12,9 @@ import javax.inject.Singleton
 internal abstract class DataModule {
     @Binds
     @Singleton
-    abstract fun bindGreetingLocalDataSource(implementation: InMemoryThreatsLocalDataSource): ThreatsLocalDataSource
+    abstract fun bindThreatsLocalDataSource(implementation: InMemoryThreatsLocalDataSource): ThreatsLocalDataSource
 
     @Binds
     @Singleton
-    abstract fun bindGreetingRepository(implementation: DefaultThreatRepository): GreetingRepository
+    abstract fun bindThreatRepository(implementation: DefaultThreatRepository): ThreatRepository
 }
