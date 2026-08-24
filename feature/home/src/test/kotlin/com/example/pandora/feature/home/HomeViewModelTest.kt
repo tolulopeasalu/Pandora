@@ -12,13 +12,15 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = FakeThreatRepository(Threat("Foundation ready"))
+    @OptIn(ExperimentalTime::class)
+    private val repository = FakeThreatRepository()
 
     @Test
     fun `initial state observes greeting and refreshes repository`() =
@@ -27,7 +29,7 @@ class HomeViewModelTest {
 
             advanceUntilIdle()
 
-            assertThat(viewModel.state.value.greeting).isEqualTo("Foundation ready")
+            assertThat(viewModel.state.value.greeting).isEqualTo("Make sure to only drink water from reliable sources")
             assertThat(viewModel.state.value.isLoading).isFalse()
             assertThat(repository.refreshCount).isEqualTo(1)
         }

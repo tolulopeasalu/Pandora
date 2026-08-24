@@ -4,7 +4,7 @@ import com.example.pandora.core.model.Threat
 import kotlinx.coroutines.flow.Flow
 
 interface ThreatRepository {
-    fun observeThreat(): Flow<Threat>
+    fun observeThreat(): Flow<List<Threat>>
 
     fun getNearbyThreats(): List<Threat>
 

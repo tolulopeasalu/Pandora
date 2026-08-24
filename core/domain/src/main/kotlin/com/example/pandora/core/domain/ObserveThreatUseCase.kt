@@ -9,5 +9,5 @@ class ObserveThreatUseCase
     constructor(
         private val repository: ThreatRepository,
     ) {
-        operator fun invoke(): Flow<Threat> = repository.observeThreat()
+        operator fun invoke(): Flow<List<Threat>> = repository.observeThreat()
     }

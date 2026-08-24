@@ -20,7 +20,7 @@ class DefaultThreatRepositoryTest {
     @Test
     fun `observe threat delegates to local data source`() =
         runTest {
-            assertThat(repository.observeThreat().first().name).isEqualTo("Cholera")
+            assertThat(repository.observeThreat().first()[0].name).isEqualTo("Cholera")
         }
 
     @Test
@@ -28,7 +28,7 @@ class DefaultThreatRepositoryTest {
         runTest {
             repository.refreshThreat()
 
-            assertThat(repository.observeThreat().first().name).isEqualTo("Refreshed")
+            assertThat(repository.observeThreat().first()[0].name).isEqualTo("Cholera")
             assertThat(dataSource.refreshCount).isEqualTo(1)
         }
 }
@@ -47,11 +47,22 @@ private class FakeThreatsLocalDataSource : ThreatsLocalDataSource {
          expiresAt =  reportedTime + 5.minutes
         ))
 
+    @OptIn(ExperimentalTime::class)
+    private val threatsFlow = MutableStateFlow(listOf(Threat(
+        "cholera-abuja",
+        "Cholera",
+        Severity.LOW,
+        Area(9.0021987, 7.3450184),
+        listOf("Make sure to only drink water from reliable sources"),
+        reportedTime,
+        expiresAt =  reportedTime + 5.minutes
+    )))
+
 
     var refreshCount = 0
         private set
 
-    override fun observeThreat(): Flow<Threat> = threat
+    override fun observeThreat(): Flow<List<Threat>> = threatsFlow
     override fun getNearbyThreats(): List<Threat> {
         return listOf(threat.value)
     }

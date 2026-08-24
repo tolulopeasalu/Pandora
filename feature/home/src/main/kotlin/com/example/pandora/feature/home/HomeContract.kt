@@ -4,6 +4,8 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     val greeting: String? = null,
     val errorMessage: String? = null,
+    val hasThreats: Boolean = false,
+    val isStale: Boolean = false
 )
 
 sealed interface HomeAction {

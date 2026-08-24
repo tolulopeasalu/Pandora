@@ -12,7 +12,7 @@ internal class DefaultThreatRepository
     constructor(
         private val localDataSource: ThreatsLocalDataSource,
     ) : ThreatRepository {
-        override fun observeThreat(): Flow<Threat> = localDataSource.observeThreat()
+        override fun observeThreat(): Flow<List<Threat>> = localDataSource.observeThreat()
     override fun getNearbyThreats(): List<Threat> = localDataSource.getNearbyThreats()
 
     override suspend fun refreshThreat() = localDataSource.refreshThreat()
