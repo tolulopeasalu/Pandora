@@ -62,11 +62,7 @@ internal class InMemoryThreatsLocalDataSource
         } else {
             threatIndex = (threatIndex + 1) % threats.size
             threats.mapIndexed { index, t ->
-                if (index == threatIndex) {
-                    t.copy(reportedAt = now, expiresAt = now + Threat.THREAT_AGEING_WINDOW)
-                } else {
-                    t
-                }
+                t.copy(reportedAt = now, expiresAt = now + Threat.THREAT_AGEING_WINDOW)
             }
         }
         threats = updatedThreats

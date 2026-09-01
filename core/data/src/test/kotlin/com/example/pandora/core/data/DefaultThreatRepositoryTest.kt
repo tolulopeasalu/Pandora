@@ -35,7 +35,7 @@ class DefaultThreatRepositoryTest {
             repository.refreshThreat()
 
             val result = repository.observeThreat().first() as ThreatsResult.Success
-            assertThat(result.threats[0].name).isEqualTo("Cholera")
+            assertThat(result.threats[0].id).isEqualTo("cholera-abuja-refresh")
             assertThat(dataSource.refreshCount).isEqualTo(1)
         }
 }
