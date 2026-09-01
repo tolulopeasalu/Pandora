@@ -1,6 +1,5 @@
 package com.example.pandora.core.model
 
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -15,13 +14,17 @@ data class Threat constructor(
     val reportedAt: Instant,
     val expiresAt: Instant
 ) {
-    val status: ThreatStatus
-        get() = if (Clock.System.now() < expiresAt) ThreatStatus.FRESH else ThreatStatus.STALE
+    fun status(now: Instant): ThreatStatus =
+        if (now < expiresAt) ThreatStatus.FRESH else ThreatStatus.STALE
 
     companion object {
         val THREAT_AGEING_WINDOW = 15.minutes
     }
 }
+
+@OptIn(ExperimentalTime::class)
+fun List<Threat>.collectionStatus(now: Instant): ThreatStatus =
+    if (any { it.status(now) == ThreatStatus.STALE }) ThreatStatus.STALE else ThreatStatus.FRESH
 
 enum class ThreatStatus {
     FRESH, STALE

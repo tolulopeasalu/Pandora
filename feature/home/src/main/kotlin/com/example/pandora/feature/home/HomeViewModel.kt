@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.pandora.core.domain.ObserveThreatUseCase
 import com.example.pandora.core.domain.RefreshThreatUseCase
 import com.example.pandora.core.model.ThreatStatus
+import com.example.pandora.core.model.ThreatsResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,15 +44,29 @@ class HomeViewModel
             viewModelScope.launch {
                 observeThreat()
                     .catch { error -> handleError(error) }
-                    .collect { threats ->
-                        mutableState.update {
-                            it.copy(
-                                isLoading = false,
-                                greeting = threats.firstOrNull()?.guidance?.firstOrNull().orEmpty(),
-                                errorMessage = null,
-                                hasThreats = threats.isNotEmpty(),
-                                isStale = threats.any { threat -> threat.status == ThreatStatus.STALE }
-                            )
+                    .collect { result ->
+                        mutableState.update { state ->
+                            when (result) {
+                                is ThreatsResult.Success -> {
+                                    val threats = result.threats
+                                    state.copy(
+                                        isLoading = false,
+                                        greeting = threats.firstOrNull()?.guidance?.firstOrNull().orEmpty(),
+                                        errorMessage = null,
+                                        hasThreats = true,
+                                        isStale = result.status == ThreatStatus.STALE
+                                    )
+                                }
+                                ThreatsResult.Empty -> {
+                                    state.copy(
+                                        isLoading = false,
+                                        greeting = null,
+                                        errorMessage = null,
+                                        hasThreats = false,
+                                        isStale = false
+                                    )
+                                }
+                            }
                         }
                     }
             }

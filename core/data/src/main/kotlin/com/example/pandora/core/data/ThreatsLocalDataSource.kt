@@ -3,16 +3,20 @@ package com.example.pandora.core.data
 import com.example.pandora.core.model.Area
 import com.example.pandora.core.model.Severity
 import com.example.pandora.core.model.Threat
+import com.example.pandora.core.model.ThreatsResult
+import com.example.pandora.core.model.collectionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 
 internal interface ThreatsLocalDataSource {
-    fun observeThreat(): Flow<List<Threat>>
+    fun observeThreat(): Flow<ThreatsResult>
 
     fun getNearbyThreats(): List<Threat>
 
@@ -21,13 +25,57 @@ internal interface ThreatsLocalDataSource {
 
 @Singleton
 internal class InMemoryThreatsLocalDataSource
+    @OptIn(ExperimentalTime::class)
     @Inject
-    constructor() : ThreatsLocalDataSource {
+    constructor(
+        private val clock: Clock
+    ) : ThreatsLocalDataSource {
+
+    private var threats = emptyList<Threat>()
+
+    private var threatIndex = 0
+    private val internalFlow = MutableStateFlow(threats)
+
+    @OptIn(ExperimentalTime::class)
+    override fun observeThreat(): Flow<ThreatsResult> = internalFlow.map {
+        if (it.isEmpty()) {
+            ThreatsResult.Empty
+        } else {
+            val now = clock.now()
+            ThreatsResult.Success(
+                threats = it,
+                status = it.collectionStatus(now),
+            )
+        }
+    }
+
+    override fun getNearbyThreats(): List<Threat> {
+        return threats
+    }
+
+    @OptIn(ExperimentalTime::class)
+    override suspend fun refreshThreat() {
+        val now = clock.now()
+
+        val updatedThreats = if (threats.isEmpty()) {
+            createSeededThreats(now)
+        } else {
+            threatIndex = (threatIndex + 1) % threats.size
+            threats.mapIndexed { index, t ->
+                if (index == threatIndex) {
+                    t.copy(reportedAt = now, expiresAt = now + Threat.THREAT_AGEING_WINDOW)
+                } else {
+                    t
+                }
+            }
+        }
+        threats = updatedThreats
+        internalFlow.value = updatedThreats
+    }
 
     @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
-    private var threats = run {
-        val now = Clock.System.now()
-        listOf(
+    private fun createSeededThreats(now: Instant): List<Threat> {
+        return listOf(
             Threat(
                 "cholera-abuja",
                 "Cholera",
@@ -66,30 +114,5 @@ internal class InMemoryThreatsLocalDataSource
                 now + Threat.THREAT_AGEING_WINDOW,
             )
         )
-    }
-
-    private var threatIndex = 0
-    private val threatsFlow = MutableStateFlow(threats)
-
-    override fun observeThreat(): Flow<List<Threat>> = threatsFlow
-
-    override fun getNearbyThreats(): List<Threat> {
-        return threats
-    }
-
-    @OptIn(ExperimentalTime::class)
-    override suspend fun refreshThreat() {
-        val now = Clock.System.now()
-        threatIndex = (threatIndex + 1) % threats.size
-
-        val updatedThreats = threats.mapIndexed { index, t ->
-            if (index == threatIndex) {
-                t.copy(reportedAt = now, expiresAt = now + Threat.THREAT_AGEING_WINDOW)
-            } else {
-                t
-            }
-        }
-        threats = updatedThreats
-        threatsFlow.value = updatedThreats
     }
 }

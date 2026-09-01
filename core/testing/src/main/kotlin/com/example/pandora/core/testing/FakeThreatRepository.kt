@@ -3,6 +3,8 @@ import com.example.pandora.core.domain.ThreatRepository
 import com.example.pandora.core.model.Area
 import com.example.pandora.core.model.Severity
 import com.example.pandora.core.model.Threat
+import com.example.pandora.core.model.ThreatsResult
+import com.example.pandora.core.model.collectionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.time.Clock
@@ -10,31 +12,45 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 class FakeThreatRepository constructor(
-    initialThreat: Threat = Threat(
-        "cholera-abuja",
-        "Cholera",
-        Severity.LOW,
-        Area(9.0021987, 7.3450184),
-        listOf("Make sure to only drink water from reliable sources"),
-        Clock.System.now(),
-        Clock.System.now() + Threat.THREAT_AGEING_WINDOW
-    ),
+    initialThreats: List<Threat> = emptyList(),
+    private val clock: Clock = Clock.System
 ) : ThreatRepository {
 
-    private val threatsFlow = MutableStateFlow(listOf(initialThreat))
+    private val threatsFlow = MutableStateFlow<ThreatsResult>(
+        if (initialThreats.isEmpty()) {
+            ThreatsResult.Empty
+        } else {
+            ThreatsResult.Success(
+                threats = initialThreats,
+                status = initialThreats.collectionStatus(clock.now()),
+            )
+        }
+    )
 
     var refreshCount: Int = 0
         private set
     var refreshFailure: Throwable? = null
 
-    fun emit(value: Threat) {
-        threatsFlow.value = listOf(value)
+
+
+    fun emit(values: List<Threat>) {
+        threatsFlow.value = if (values.isEmpty()) {
+            ThreatsResult.Empty
+        } else {
+            ThreatsResult.Success(
+                threats = values,
+                status = values.collectionStatus(clock.now()),
+            )
+        }
     }
 
-    override fun observeThreat(): Flow<List<Threat>> = threatsFlow
+    override fun observeThreat(): Flow<ThreatsResult> = threatsFlow
 
     override fun getNearbyThreats(): List<Threat> {
-        return threatsFlow.value
+        return when (val result = threatsFlow.value) {
+            is ThreatsResult.Success -> result.threats
+            ThreatsResult.Empty -> emptyList()
+        }
     }
 
     override suspend fun refreshThreat() {
