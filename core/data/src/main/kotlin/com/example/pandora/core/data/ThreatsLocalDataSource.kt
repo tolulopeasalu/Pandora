@@ -56,10 +56,10 @@ internal class InMemoryThreatsLocalDataSource
                     if (status == ThreatStatus.STALE) break
 
                     val earliestExpiry = threats.minOf { it.expiresAt }
-                    val delayMillis = (earliestExpiry - now).inWholeMilliseconds
-                    if (delayMillis <= 0) continue
+                    val timeRemaining = (earliestExpiry - now)
 
-                    delay((delayMillis + 1).milliseconds)
+
+                    delay(timeRemaining + 1.milliseconds)
                 }
             }
         }
