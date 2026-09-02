@@ -3,14 +3,20 @@ package com.example.pandora.core.data
 import com.example.pandora.core.model.Area
 import com.example.pandora.core.model.Severity
 import com.example.pandora.core.model.Threat
+import com.example.pandora.core.model.ThreatStatus
 import com.example.pandora.core.model.ThreatsResult
 import com.example.pandora.core.model.collectionStatus
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
@@ -36,16 +42,26 @@ internal class InMemoryThreatsLocalDataSource
     private var threatIndex = 0
     private val internalFlow = MutableStateFlow(threats)
 
-    @OptIn(ExperimentalTime::class)
-    override fun observeThreat(): Flow<ThreatsResult> = internalFlow.map {
-        if (it.isEmpty()) {
-            ThreatsResult.Empty
+    @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
+    override fun observeThreat(): Flow<ThreatsResult> = internalFlow.flatMapLatest { threats ->
+        if (threats.isEmpty()) {
+            flowOf<ThreatsResult>(ThreatsResult.Empty)
         } else {
-            val now = clock.now()
-            ThreatsResult.Success(
-                threats = it,
-                status = it.collectionStatus(now),
-            )
+            flow {
+                while (true) {
+                    val now = clock.now()
+                    val status = threats.collectionStatus(now)
+                    emit(ThreatsResult.Success(threats, status))
+
+                    if (status == ThreatStatus.STALE) break
+
+                    val earliestExpiry = threats.minOf { it.expiresAt }
+                    val delayMillis = (earliestExpiry - now).inWholeMilliseconds
+                    if (delayMillis <= 0) continue
+
+                    delay((delayMillis + 1).milliseconds)
+                }
+            }
         }
     }
 

@@ -3,11 +3,18 @@ import com.example.pandora.core.domain.ThreatRepository
 import com.example.pandora.core.model.Area
 import com.example.pandora.core.model.Severity
 import com.example.pandora.core.model.Threat
+import com.example.pandora.core.model.ThreatStatus
 import com.example.pandora.core.model.ThreatsResult
 import com.example.pandora.core.model.collectionStatus
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -16,16 +23,7 @@ class FakeThreatRepository constructor(
     private val clock: Clock = Clock.System
 ) : ThreatRepository {
 
-    private val threatsFlow = MutableStateFlow<ThreatsResult>(
-        if (initialThreats.isEmpty()) {
-            ThreatsResult.Empty
-        } else {
-            ThreatsResult.Success(
-                threats = initialThreats,
-                status = initialThreats.collectionStatus(clock.now()),
-            )
-        }
-    )
+    private val internalFlow = MutableStateFlow(initialThreats)
 
     var refreshCount: Int = 0
         private set
@@ -34,23 +32,34 @@ class FakeThreatRepository constructor(
 
 
     fun emit(values: List<Threat>) {
-        threatsFlow.value = if (values.isEmpty()) {
-            ThreatsResult.Empty
+        internalFlow.value = values
+    }
+
+    @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
+    override fun observeThreat(): Flow<ThreatsResult> = internalFlow.flatMapLatest { threats ->
+        if (threats.isEmpty()) {
+            flowOf<ThreatsResult>(ThreatsResult.Empty)
         } else {
-            ThreatsResult.Success(
-                threats = values,
-                status = values.collectionStatus(clock.now()),
-            )
+            flow {
+                while (true) {
+                    val now = clock.now()
+                    val status = threats.collectionStatus(now)
+                    emit(ThreatsResult.Success(threats, status))
+
+                    if (status == ThreatStatus.STALE) break
+
+                    val earliestExpiry = threats.minOf { it.expiresAt }
+                    val delayMillis = (earliestExpiry - now).inWholeMilliseconds
+                    if (delayMillis <= 0) continue
+
+                    delay((delayMillis + 1).milliseconds)
+                }
+            }
         }
     }
 
-    override fun observeThreat(): Flow<ThreatsResult> = threatsFlow
-
     override fun getNearbyThreats(): List<Threat> {
-        return when (val result = threatsFlow.value) {
-            is ThreatsResult.Success -> result.threats
-            ThreatsResult.Empty -> emptyList()
-        }
+        return internalFlow.value
     }
 
     override suspend fun refreshThreat() {

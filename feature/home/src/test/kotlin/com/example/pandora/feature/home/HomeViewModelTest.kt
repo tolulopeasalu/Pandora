@@ -97,14 +97,12 @@ class HomeViewModelTest {
 
         assertThat(viewModel.state.value.isStale).isFalse()
 
-        // Advance time beyond the ageing window
+        // Advance time beyond the ageing window in the fake clock
         fakeClock.advanceBy(16.minutes)
 
-        // The flow in FakeThreatRepository needs to be triggered to re-emit with new status.
-        // In a real app, the flow might be polled or triggered by some event.
-        // Here, we manually re-emit the current threats to simulate a state check.
-        repository.emit(repository.getNearbyThreats())
-        advanceUntilIdle()
+        // Advance the virtual time in the test dispatcher to resume the delay() in the flow
+        testScheduler.advanceTimeBy(16.minutes.inWholeMilliseconds)
+        testScheduler.runCurrent()
 
         assertThat(viewModel.state.value.isStale).isTrue()
     }
