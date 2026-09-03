@@ -90,10 +90,26 @@ private fun HomeContent(
                 text = "A robust foundation for scalable Android products",
                 style = MaterialTheme.typography.headlineMedium,
             )
-            Card(modifier = Modifier.fillMaxWidth()) {
+            if (state.hasThreats){
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = state.errorMessage ?: state.greeting.orEmpty(),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        if (state.isStale) {
+                            Text(
+                                text = "STALE DATA",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
+            } else {
                 Text(
-                    text = state.errorMessage ?: state.greeting.orEmpty(),
-                    modifier = Modifier.padding(24.dp),
+                    text = "No threats found",
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
@@ -104,7 +120,7 @@ private fun HomeContent(
                     onClick = onRefresh,
                     modifier = Modifier.heightIn(min = 48.dp),
                 ) {
-                    Text("Refresh foundation message")
+                    Text("Refresh threats list")
                 }
             }
         }
